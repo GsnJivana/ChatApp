@@ -15,7 +15,10 @@ class ChatController extends Controller
     public function index()
     {
         $users = User::where('id', '!=', Auth::id())->get();
-        return view('chat', ['users' => $users]);
+        return view('chat', [
+        'users' => $users,
+        'selectedConversation' => null
+    ]);
     }
 
     // Affiche une conversation spécifique
@@ -58,6 +61,6 @@ class ChatController extends Controller
         // Diffuse l'événement aux autres utilisateurs
         broadcast(new MessageSent($message->load('user')))->toOthers();
 
-        return response()->json(['status' => 'Message envoyé !']); // On renvoie du JSON maintenant
+        return back();
     }
 }

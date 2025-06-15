@@ -62,69 +62,45 @@
         </div>
     </div>
 
-    @push('scripts')
-    <script>
-        // Le code Javascript pour le temps réel viendra ici
-        @if(isset($selectedConversation))
-document.addEventListener('DOMContentLoaded', () => {
-    const chatBox = document.getElementById('chat-box');
-    const messageForm = document.getElementById('message-form');
-    const messageInput = messageForm.querySelector('input[name="body"]');
+@push('scripts')
+    @if(isset($selectedConversation))
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const chatBox = document.getElementById('chat-box');
 
-    // Faire défiler la boîte de chat vers le bas
-    chatBox.scrollTop = chatBox.scrollHeight;
+                if (!chatBox) {
+                    return;
+                }
+                
+                const scrollToBottom = () => {
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                };
 
-    // Écouter les événements sur le canal de la conversation
-    window.Echo.private('conversation.{{ $selectedConversation->id }}')
-        .listen('MessageSent', (e) => {
-            console.log('Nouveau message reçu:', e);
-            
-            // Créer le HTML du nouveau message
-            const messageHtml = `
-                <div class="mb-2">
-                    <small>${e.message.user.name}</small><br>
-                    <span class="badge rounded-pill bg-secondary">
-                        ${e.message.body}
-                    </span>
-                </div>
-            `;
+                scrollToBottom();
 
-            // Ajouter le message à la boîte de chat et faire défiler
-            chatBox.innerHTML += messageHtml;
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
+                // On garde l'écoute des messages ENTRANTS.
+                // Ce code est pour recevoir les messages des autres.
+                window.Echo.private('conversation.{{ $selectedConversation->id }}')
+                    .listen('MessageSent', (e) => {
+                        const avatarUrl = e.message.user.avatar.startsWith('http') ? e.message.user.avatar : `/storage/${e.message.user.avatar}`;
+                        const messageHtml = `
+                            <div class="message received">
+                                <img src="${avatarUrl}" alt="${e.message.user.name}" class="message-avatar">
+                                <div class="message-bubble">
+                                    ${e.message.body}
+                                </div>
+                            </div>
+                        `;
+                        chatBox.insertAdjacentHTML('beforeend', messageHtml);
+                        scrollToBottom();
+                    });
 
-    // Intercepter l'envoi du formulaire via AJAX
-    messageForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        fetch(messageForm.action, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({ body: messageInput.value })
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Ajouter le message de l'expéditeur directement à l'interface
-            const messageHtml = `
-                <div class="mb-2 text-end">
-                    <small>Vous</small><br>
-                    <span class="badge rounded-pill bg-primary">
-                        ${messageInput.value}
-                    </span>
-                </div>
-            `;
-            chatBox.innerHTML += messageHtml;
-            chatBox.scrollTop = chatBox.scrollHeight;
-            messageInput.value = ''; // Vider le champ de saisie
-        });
-    });
-});
-@endif
-    </script>
-    @endpush
+                // ===============================================
+                // TOUTE LA PARTIE 'messageForm.addEventListener' A ÉTÉ SUPPRIMÉE.
+                // ===============================================
+
+            });
+        </script>
+    @endif
+@endpush
 </x-app-layout>
