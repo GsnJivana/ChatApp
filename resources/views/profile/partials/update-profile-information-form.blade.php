@@ -46,7 +46,17 @@
                 </div>
             @endif
         </div>
+        <!-- Bio -->
+    <div class="mb-3">
+        <label for="bio" class="form-label">Biographie</label>
+        <textarea id="bio" name="bio" class="form-control">{{ old('bio', $user->bio) }}</textarea>
+    </div>
 
+    <!-- Avatar -->
+    <div class="mb-3">
+        <label for="avatar" class="form-label">Photo de profil</label>
+        <input id="avatar" name="avatar" type="file" class="form-control">
+    </div>
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 
