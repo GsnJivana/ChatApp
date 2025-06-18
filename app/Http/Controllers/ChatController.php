@@ -7,6 +7,7 @@ use App\Models\Conversation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Events\MessageSent;
+use App\Notifications\NewMessageNotification;
 
 class ChatController extends Controller
 {
@@ -61,6 +62,10 @@ class ChatController extends Controller
         // Diffuse l'événement aux autres utilisateurs
         broadcast(new MessageSent($message->load('user')))->toOthers();
 
+        $recipient = $conversation->users()->where('id', '!=', Auth::id())->first();
+    if ($recipient) {
+        $recipient->notify(new NewMessageNotification($message));
+    }
         return back();
     }
 }

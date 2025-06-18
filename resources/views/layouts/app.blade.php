@@ -39,5 +39,34 @@
             </main>
         </div>
     </body>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    @auth
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"> </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const userId = {{ auth()->id() }};
+        const notificationBadge = document.getElementById('notification-badge');
+        let notificationCount = {{ auth()->user()->unreadNotifications->count() }};
+
+        function updateBadge() {
+            if (notificationCount > 0) {
+                notificationBadge.innerText = notificationCount;
+                notificationBadge.style.display = 'inline-block';
+            } else {
+                notificationBadge.style.display = 'none';
+            }
+        }
+
+        updateBadge(); // Mettre à jour au chargement de la page
+
+        window.Echo.private('App.Models.User.' + userId)
+            .notification((notification) => {
+                console.log('Notification reçue:', notification);
+                notificationCount++;
+                updateBadge();
+                // Optionnel : afficher un "toast"
+                alert(notification.sender_name + " " + notification.text);
+            });
+    });
+    </script>
+    @endauth
 </html>
